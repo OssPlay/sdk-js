@@ -55,6 +55,12 @@ export async function projectGet(
 	console.log(`Saved to ${outputPath} (${blob.size} bytes)`);
 }
 
+export async function projectDelete(project: string, assetId: string): Promise<void> {
+	const client = await clientFor(project);
+	await client.files.delete(assetId);
+	console.log(`Deleted ${assetId}`);
+}
+
 export async function projectUpload(project: string, filePaths: string[]): Promise<void> {
 	const client = await clientFor(project);
 	const files = await Promise.all(

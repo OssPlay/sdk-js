@@ -1,13 +1,20 @@
 import type { ImageFormat } from "@ossplay/sdk";
 import { configure, configureList } from "./commands/configure";
-import { type GetOptions, projectGet, projectLs, projectUpload } from "./commands/project";
+import {
+	type GetOptions,
+	projectDelete,
+	projectGet,
+	projectLs,
+	projectUpload,
+} from "./commands/project";
 
 const USAGE = `Usage:
   op configure                       Save a connection (instance URL + API key) for a project
   op configure ls                    List configured connections
   op <project> ls [--folder <id>]    List a project's files
   op <project> get <assetId> [-o <path>] [--w <n>] [--h <n>] [--format <fmt>] [--q <n>]
-  op <project> upload <file...>      Upload one or more local files`;
+  op <project> upload <file...>      Upload one or more local files
+  op <project> delete <assetId>      Delete a file`;
 
 // Flags are parsed positionally (no external arg-parsing dependency) — the
 // command set is small and fixed enough that this stays simple.
@@ -71,6 +78,12 @@ export async function run(argv: string[]): Promise<void> {
 			if (positional.length === 0) throw new Error("Usage: op <project> upload <file...>");
 			await projectUpload(project, positional);
 			return;
+		case "delete": {
+			const assetId = positional[0];
+			if (!assetId) throw new Error("Usage: op <project> delete <assetId>");
+			await projectDelete(project, assetId);
+			return;
+		}
 		default:
 			console.log(USAGE);
 	}
