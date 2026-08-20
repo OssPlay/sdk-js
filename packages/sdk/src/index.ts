@@ -12,3 +12,5 @@ export type {
 	UploadedAsset,
 	UploadInput,
 } from "./types";
+export type { VideoEmbedOptions } from "./video";
+export { VideoEmbed } from "./video";
