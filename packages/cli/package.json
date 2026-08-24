@@ -5,8 +5,8 @@
 	"license": "MIT",
 	"type": "module",
 	"bin": {
-		"op": "./dist/index.js",
-		"ossplay": "./dist/index.js"
+		"op": "dist/index.js",
+		"ossplay": "dist/index.js"
 	},
 	"files": [
 		"dist"

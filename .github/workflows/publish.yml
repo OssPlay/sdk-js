@@ -10,20 +10,31 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun test
       - run: bun run build
-      - run: npm publish --access public --workspaces
+      # `npm publish --workspaces` (the previous approach) leaves
+      # @ossplay/cli's "@ossplay/sdk": "workspace:*" dependency completely
+      # unresolved in the published tarball — npm has no publish-time
+      # workspace-protocol rewrite, unlike pnpm/Yarn. `bun publish` does
+      # rewrite it to the real resolved version (verified: workspace:* ->
+      # 0.1.0 in the packed package.json), so this publishes per-package
+      # directly via Bun instead. sdk first: cli's own dependency should
+      # point at a version that's already live by the time anyone installs
+      # cli, not published moments later in the same job.
+      - name: Publish @ossplay/sdk
+        working-directory: packages/sdk
+        run: bun publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @ossplay/cli
+        working-directory: packages/cli
+        run: bun publish
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
