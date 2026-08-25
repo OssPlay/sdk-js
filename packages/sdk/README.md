@@ -5,7 +5,7 @@
 
 TypeScript/JavaScript client for [OSSPlay](https://ossplay.phuzle.com)'s public consumer API
 (`/api/v1`) — list, upload, download, and delete files on a self-hosted OSSPlay instance, plus
-on-the-fly image transforms and video embed links.
+on-the-fly image transforms, video renditions, and embed links.
 
 ## Install
 
@@ -16,6 +16,10 @@ bun add @ossplay/sdk
 
 ## Usage
 
+`client` is itself a folder reference, scoped to the project root — every method below works
+identically on `client` and on any folder you get from it (`client.folder(id)`). Nothing fetches until
+you call a method.
+
 ```ts
 import { OSSPlay } from "@ossplay/sdk";
 
@@ -25,29 +29,42 @@ const client = new OSSPlay({
   project: "my-project",
 });
 
-const { folders, assets } = await client.files.list();
+const { folders, assets } = await client.list();
 
-await client.files.upload({ data: bytes, filename: "report.pdf", mimeType: "application/pdf" });
+const results = await client.upload({ data: bytes, filename: "report.pdf", mimeType: "application/pdf" });
+// -> (AssetRef | ErrorRef)[], one per file — a bad file doesn't fail the rest
 
-const blob = await client.files.download("asset_123");
+const bytes = await client.asset("asset_123").download();
 
-await client.files.delete("asset_123");
+await client.asset("asset_123").delete();
+```
+
+### Folders
+
+```ts
+const vacation = client.folder("/2026/08/vacation", { create: true }); // auto-creates a missing path
+await vacation.upload(file1, file2);
+
+const photos = client.folder("/2026").create("photos"); // a real child; conflicts if it already exists
 ```
 
 ### Image transforms
 
 ```ts
-client.image("asset_123", { w: 800, format: "webp", q: 80 }).url();
+const transform = await client.asset("asset_123").transform({ w: 800, format: "webp", q: 80 });
+transform.url();
 // -> embeddable URL, straight into <img src>
 
-const blob = await client.image("asset_123", { w: 800 }).blob();
+const blob = await transform.blob();
 ```
 
-### Video embeds
+Throws if the asset isn't an image — checked before any request.
+
+### Video renditions & embeds
 
 ```ts
-const url = await client.video("asset_123").embedUrl();
-const iframe = await client.video("asset_123").embedIframe({ width: 800, height: 450 });
+const variant = await client.asset("asset_123").requestRendition({ kind: "hls-package" });
+const { url, iframe } = await client.asset("asset_123").embed({ width: 800, height: 450 });
 ```
 
 ## Docs

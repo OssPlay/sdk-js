@@ -1,16 +1,22 @@
+export { AssetRef } from "./asset-ref";
+export type { EmbedOptions, EmbedResult, UrlOptions } from "./asset-ref";
 export { OSSPlay } from "./client";
-export type { FilesApi } from "./files";
+export { ErrorRef } from "./error-ref";
+export type { FolderOptions, ListOptions } from "./folder-ref";
+export { FolderRef } from "./folder-ref";
 export { OSSPlayError } from "./http";
-export { ImageRequest } from "./image";
+export type { OSSPlayErrorCode } from "./http";
+export { ImageTransformRef } from "./image-transform-ref";
 export type {
+	AssetInfo,
 	AssetSummary,
+	DirectUrl,
+	FolderInfo,
 	FolderSummary,
 	ImageFormat,
 	ImageTransformOptions,
-	ListResult,
 	OSSPlayOptions,
+	RenditionSpec,
 	UploadedAsset,
 	UploadInput,
 } from "./types";
-export type { VideoEmbedOptions } from "./video";
-export { VideoEmbed } from "./video";
