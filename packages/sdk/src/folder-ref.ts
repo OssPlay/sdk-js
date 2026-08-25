@@ -16,6 +16,22 @@ export interface FolderOptions {
 	create?: boolean;
 }
 
+export interface CreateUploadUrlOptions {
+	filename: string;
+	mimeType: string;
+	/** Byte size, if known upfront — never verified against what actually gets uploaded, but the larger this is, the longer `expiresAt` gives you (see `UploadTarget`), so a big file on a slow connection doesn't outrun its own upload target. Omit it and you just get the base window. */
+	size?: number;
+}
+
+export interface UploadTarget {
+	assetId: string;
+	/** PUT the raw file bytes here — no API key needed, so this is safe to hand to a browser. For an S3-backed project this points straight at the bucket; for local disk it's this same API, reachable without auth for this one call. */
+	uploadUrl: string;
+	method: "PUT";
+	/** ISO timestamp — the target stops working after this, used or not. */
+	expiresAt: string;
+}
+
 function toFile(input: UploadInput): File {
 	if (input instanceof File) return input;
 	return new File([input.data as BlobPart], input.filename, { type: input.mimeType });
@@ -169,6 +185,27 @@ export class FolderRef {
 				}
 			}),
 		);
+	}
+
+	/**
+	 * Step 1 of a browser-driven upload — call this from your own backend
+	 * (it needs the API key), then hand the returned `uploadUrl` to the
+	 * browser to PUT the file bytes to directly. The bytes never pass
+	 * through your server or this SDK. Once that PUT finishes, call
+	 * `client.asset(assetId).confirmUpload()` (from your backend again) to
+	 * finalize it and kick off any processing. A server/CLI caller that
+	 * already has the file in hand doesn't need any of this — `.upload()`
+	 * is a single call instead of three.
+	 */
+	async createUploadUrl(options: CreateUploadUrlOptions): Promise<UploadTarget> {
+		if (!this.ctx.apiKey) throw new Error("An API key is required to create an upload URL");
+		const target = this.queryFolderParam();
+		const query = target ? `?folder=${encodeURIComponent(target)}` : "";
+		return apiFetch<UploadTarget>(this.ctx, `/uploads${query}`, {
+			method: "POST",
+			headers: JSON_HEADERS,
+			body: JSON.stringify(options),
+		});
 	}
 
 	async rename(name: string): Promise<FolderInfo> {

@@ -55,6 +55,14 @@ export class AssetRef {
 		return response.blob();
 	}
 
+	/** Step 2 of a browser-driven upload (see `FolderRef.createUploadUrl()`) — call once the browser's PUT finishes, to verify the bytes actually landed and kick off any processing (thumbnails, transcodes). Throws `invalid_input` if nothing was ever PUT to this asset's upload target. */
+	async confirmUpload(): Promise<AssetInfo> {
+		const result = await apiFetch<{ asset: AssetInfo }>(this.ctx, `/${enc(this.id)}/confirm`, {
+			method: "POST",
+		});
+		return result.asset;
+	}
+
 	async rename(filename: string): Promise<AssetInfo> {
 		const result = await apiFetch<{ asset: AssetInfo }>(this.ctx, `/${enc(this.id)}`, {
 			method: "PATCH",

@@ -2,7 +2,7 @@ export { AssetRef } from "./asset-ref";
 export type { EmbedOptions, EmbedResult, UrlOptions } from "./asset-ref";
 export { OSSPlay } from "./client";
 export { ErrorRef } from "./error-ref";
-export type { FolderOptions, ListOptions } from "./folder-ref";
+export type { CreateUploadUrlOptions, FolderOptions, ListOptions, UploadTarget } from "./folder-ref";
 export { FolderRef } from "./folder-ref";
 export { OSSPlayError } from "./http";
 export type { OSSPlayErrorCode } from "./http";

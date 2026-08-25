@@ -5,7 +5,8 @@
 
 TypeScript/JavaScript client for [OSSPlay](https://ossplay.phuzle.com)'s public consumer API
 (`/api/v1`) — list, upload, download, and delete files on a self-hosted OSSPlay instance, plus
-on-the-fly image transforms, video renditions, and embed links.
+on-the-fly image transforms, video renditions, embed links, and presigned direct-to-storage uploads
+for a browser.
 
 ## Install
 
@@ -46,6 +47,24 @@ const vacation = client.folder("/2026/08/vacation", { create: true }); // auto-c
 await vacation.upload(file1, file2);
 
 const photos = client.folder("/2026").create("photos"); // a real child; conflicts if it already exists
+```
+
+### Direct browser uploads
+
+`client.upload()` needs your API key, which a browser should never hold. For a file picked in the
+browser, get a presigned target instead — your backend requests it, the browser `PUT`s straight to
+storage, your backend confirms:
+
+```ts
+// your backend:
+const target = await client.createUploadUrl({ filename: file.name, mimeType: file.type });
+// -> send target.assetId + target.uploadUrl down to the browser
+
+// the browser, no API key involved:
+await fetch(target.uploadUrl, { method: target.method, body: file });
+
+// your backend again, once the browser confirms the PUT finished:
+const asset = await client.asset(target.assetId).confirmUpload();
 ```
 
 ### Image transforms

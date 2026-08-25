@@ -128,6 +128,52 @@ describe("FolderRef", () => {
 		});
 	});
 
+	describe("createUploadUrl(...)", () => {
+		test("posts to /uploads with the given metadata and returns the target as-is", async () => {
+			mockFetch(() =>
+				new Response(
+					JSON.stringify({
+						assetId: "asset_1",
+						uploadUrl: "https://bucket.s3.example.com/signed",
+						method: "PUT",
+						expiresAt: "2026-01-01T00:00:00.000Z",
+					}),
+					{ status: 201 },
+				),
+			);
+			const target = await client().createUploadUrl({ filename: "video.mp4", mimeType: "video/mp4" });
+			expect(calls[0]?.method).toBe("POST");
+			expect(calls[0]?.url).toBe("/api/v1/my-proj/uploads");
+			expect(calls[0]?.body).toEqual({ filename: "video.mp4", mimeType: "video/mp4" });
+			expect(target).toEqual({
+				assetId: "asset_1",
+				uploadUrl: "https://bucket.s3.example.com/signed",
+				method: "PUT",
+				expiresAt: "2026-01-01T00:00:00.000Z",
+			});
+		});
+
+		test("scopes to this ref's folder the same way upload() does", async () => {
+			mockFetch(() =>
+				new Response(
+					JSON.stringify({ assetId: "a", uploadUrl: "u", method: "PUT", expiresAt: "e" }),
+					{ status: 201 },
+				),
+			);
+			await client().folder("/a/b").createUploadUrl({ filename: "x.txt", mimeType: "text/plain" });
+			expect(calls[0]?.url).toBe("/api/v1/my-proj/uploads?folder=%2Fa%2Fb");
+		});
+
+		test("throws without an API key, before making a request", async () => {
+			mockFetch(() => new Response("unexpected", { status: 500 }));
+			const noKeyClient = new OSSPlay({ endpoint: "https://media.example.com", project: "my-proj" });
+			await expect(
+				noKeyClient.createUploadUrl({ filename: "x.txt", mimeType: "text/plain" }),
+			).rejects.toThrow("An API key is required");
+			expect(calls).toHaveLength(0);
+		});
+	});
+
 	describe("root guard", () => {
 		test("rename()/move()/delete() throw a clear error on the root ref", async () => {
 			await expect(client().rename("x")).rejects.toThrow("The root folder has no id");

@@ -145,6 +145,38 @@ describe("AssetRef", () => {
 		});
 	});
 
+	test("confirmUpload() POSTs to .../confirm with no body and returns the confirmed asset", async () => {
+		mockFetch(() =>
+			new Response(
+				JSON.stringify({
+					asset: {
+						id: "asset_1",
+						filename: "f",
+						mimeType: "text/plain",
+						size: 3,
+						status: "ready",
+						folderId: null,
+						parentAssetId: null,
+						createdAt: "",
+						updatedAt: "",
+					},
+				}),
+				{ status: 200 },
+			),
+		);
+		const result = await new OSSPlay({
+			endpoint: "https://media.example.com",
+			apiKey: "op_secret",
+			project: "my-proj",
+		})
+			.asset("asset_1")
+			.confirmUpload();
+		expect(calls[0]?.method).toBe("POST");
+		expect(calls[0]?.url).toBe("/api/v1/my-proj/asset_1/confirm");
+		expect(calls[0]?.body).toBeUndefined();
+		expect(result.status).toBe("ready");
+	});
+
 	test("delete() DELETEs the asset", async () => {
 		mockFetch(() => new Response(null, { status: 204 }));
 		await new OSSPlay({ endpoint: "https://media.example.com", apiKey: "op_secret", project: "my-proj" })
