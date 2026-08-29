@@ -29,7 +29,7 @@
     },
     "packages/sdk": {
       "name": "@ossplay/sdk",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "devDependencies": {
         "@types/bun": "^1.3.14",
         "tsup": "^8.3.5",
